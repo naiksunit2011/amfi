@@ -1,45 +1,61 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <style>
-      #result {
-        font-size: 30px;
+      * {
         font-family: -webkit-pictograph;
       }
+
+      body {
+        background-color: black;
+        color: white;
+      }
+
+      #setting {
+        text-align: center;
+      }
+
+      #dataInput {
+        vertical-align: middle;
+      }
+
       table {
         margin-left: auto;
         margin-right: auto;
         width: 90%;
       }
+
       .table-header {
         height: 40px;
       }
+
       .col-right {
         text-align: right;
       }
+
       .col-left {
         text-align: left;
       }
     </style>
     <script>
+      let SERVICE_CACHE = "serviceCacheData";
       let serviceArr = [];
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/quant-small-cap-fund-direct-plan/portfolio-holdings/MES056");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/icici-prudential-technology-fund-direct-plan/portfolio-holdings/MPI1128");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/kotak-small-cap-fund-direct-plan/portfolio-holdings/MKM516");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/mirae-asset-emerging-bluechip-fund-direct-plan/portfolio-holdings/MMA100");
-
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/tata-digital-india-fund-direct-plan/portfolio-holdings/MTA1147");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/pgim-india-flexi-cap-fund-direct-plan/portfolio-holdings/MPA159");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/nippon-india-small-cap-fund-direct-plan/portfolio-holdings/MRC935");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/quant-active-fund-direct-plan/portfolio-holdings/MES061");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/mirae-asset-emerging-bluechip-fund-direct-plan/portfolio-holdings/MMA100");
       serviceArr.push("https://www.moneycontrol.com/mutual-funds/axis-small-cap-fund-direct-plan/portfolio-holdings/MAA316");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/parag-parikh-flexi-cap-fund-direct-plan/portfolio-holdings/MPP002");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/nippon-india-pharma-fund-direct-plan/portfolio-holdings/MRC1005");
+      serviceArr.push("https://www.moneycontrol.com/mutual-funds/pgim-india-flexi-cap-fund-direct-plan/portfolio-holdings/MPA159");
+      serviceArr.push("https://www.moneycontrol.com/mutual-funds/kotak-small-cap-fund-direct-plan/portfolio-holdings/MKM516");
+      serviceArr.push("https://www.moneycontrol.com/mutual-funds/tata-digital-india-fund-direct-plan/portfolio-holdings/MTA1147");
+      serviceArr.push("https://www.moneycontrol.com/mutual-funds/pgim-india-midcap-opportunities-fund-direct-plan/portfolio-holdings/MPA139");
+      serviceArr.push("https://www.moneycontrol.com/mutual-funds/nippon-india-small-cap-fund-direct-plan/portfolio-holdings/MRC935");
+      serviceArr.push("https://www.moneycontrol.com/mutual-funds/quant-small-cap-fund-direct-plan/portfolio-holdings/MES056");
+      serviceArr.push("https://www.moneycontrol.com/mutual-funds/mirae-asset-emerging-bluechip-fund-direct-plan/portfolio-holdings/MMA100");
+      serviceArr.push("https://www.moneycontrol.com/mutual-funds/icici-prudential-technology-fund-direct-plan/portfolio-holdings/MPI1128");
+      serviceArr.push("https://www.moneycontrol.com/mutual-funds/quant-active-fund-direct-plan/portfolio-holdings/MES061");
+      // serviceArr.push("https://www.moneycontrol.com/mutual-funds/parag-parikh-flexi-cap-fund-direct-plan/portfolio-holdings/MPP002");
+      // serviceArr.push("https://www.moneycontrol.com/mutual-funds/nippon-india-pharma-fund-direct-plan/portfolio-holdings/MRC1005");
 
       let resultJson = {};
-      let cacheTimeout = 900000;
-      let serviceCacheName = "serviceCacheData";
+      let cacheTimeout = 600000;
       let serviceCache = getServiceCache();
 
       function init() {
@@ -47,9 +63,7 @@
           const portfolioUrl = serviceArr[index];
           const navUrl = getNavUrl(portfolioUrl);
           callService(portfolioUrl, (responseText) => {
-            document.addEventListener("DOMContentLoaded", (event) => {
-              processMutualFund(getFundName(portfolioUrl), responseText);
-            });
+            processMutualFund(getFundName(portfolioUrl), responseText);
           });
         }
       }
@@ -70,7 +84,7 @@
         return splitStr.join(" ");
       }
 
-      function callService(portfolioUrl, callbackFunction) {
+      function callService(url, callbackFunction) {
         let xmlhttp = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
         xmlhttp.onreadystatechange = () => {
           if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
@@ -80,7 +94,7 @@
             return xmlhttp.responseText;
           }
         };
-        xmlhttp.open("GET", portfolioUrl, false);
+        xmlhttp.open("GET", url, true);
         xmlhttp.send();
       }
 
@@ -120,6 +134,19 @@
         }
         let table = `<table><tr class="table-header"><th class="col-left">Mutual Fund Name</th><th class="col-right">Change %</th></tr>${tableRow}</table>`;
         document.getElementById("result").innerHTML = table;
+        const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+
+        const comparer = (idx, asc) => (a, b) =>
+          ((v1, v2) => (v1 !== "" && v2 !== "" && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)))(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+
+        document.querySelectorAll("th").forEach((th) =>
+          th.addEventListener("click", () => {
+            const table = th.closest("table");
+            Array.from(table.querySelectorAll("tr:nth-child(n+2)"))
+              .sort(comparer(Array.from(th.parentNode.children).indexOf(th), (this.asc = !this.asc)))
+              .forEach((tr) => table.appendChild(tr));
+          })
+        );
       }
 
       function getCurrentStockChange(stockLink, callbackFunction) {
@@ -148,19 +175,18 @@
       }
 
       function getServiceCache() {
-        return JSON.parse(localStorage.getItem(serviceCacheName) || "{}");
+        return JSON.parse(localStorage.getItem(SERVICE_CACHE) || "{}");
       }
 
       function setServiceCache(serviceCache) {
-        localStorage.setItem(serviceCacheName, JSON.stringify(serviceCache));
+        localStorage.setItem(SERVICE_CACHE, JSON.stringify(serviceCache));
       }
 
       init();
     </script>
   </head>
+
   <body>
-    <pre>
-      <div id="result"></div>
-    </pre>
+    <div id="result"></div>
   </body>
 </html>
