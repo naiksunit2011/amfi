@@ -5,7 +5,6 @@
     <style>
       * {
         font-family: -webkit-pictograph;
-        font-size: 20px;
       }
 
       body {
@@ -42,31 +41,38 @@
     <script>
       let SERVICE_CACHE = "serviceCacheData";
       let serviceArr = [];
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/axis-small-cap-fund-direct-plan/portfolio-holdings/MAA316");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/pgim-india-flexi-cap-fund-direct-plan/portfolio-holdings/MPA159");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/kotak-small-cap-fund-direct-plan/portfolio-holdings/MKM516");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/tata-digital-india-fund-direct-plan/portfolio-holdings/MTA1147");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/pgim-india-midcap-opportunities-fund-direct-plan/portfolio-holdings/MPA139");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/nippon-india-small-cap-fund-direct-plan/portfolio-holdings/MRC935");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/quant-small-cap-fund-direct-plan/portfolio-holdings/MES056");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/mirae-asset-emerging-bluechip-fund-direct-plan/portfolio-holdings/MMA100");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/icici-prudential-technology-fund-direct-plan/portfolio-holdings/MPI1128");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/quant-active-fund-direct-plan/portfolio-holdings/MES061");
-      // serviceArr.push("https://www.moneycontrol.com/mutual-funds/parag-parikh-flexi-cap-fund-direct-plan/portfolio-holdings/MPP002");
-      // serviceArr.push("https://www.moneycontrol.com/mutual-funds/nippon-india-pharma-fund-direct-plan/portfolio-holdings/MRC1005");
+      let amountArr = [];
+      addServiceData("https://www.moneycontrol.com/mutual-funds/axis-small-cap-fund-direct-plan/portfolio-holdings/MAA316",500);
+      addServiceData("https://www.moneycontrol.com/mutual-funds/pgim-india-flexi-cap-fund-direct-plan/portfolio-holdings/MPA159",100);
+      addServiceData("https://www.moneycontrol.com/mutual-funds/kotak-small-cap-fund-direct-plan/portfolio-holdings/MKM516",5000);
+      addServiceData("https://www.moneycontrol.com/mutual-funds/tata-digital-india-fund-direct-plan/portfolio-holdings/MTA1147",500);
+      addServiceData("https://www.moneycontrol.com/mutual-funds/pgim-india-midcap-opportunities-fund-direct-plan/portfolio-holdings/MPA139",1000);
+      addServiceData("https://www.moneycontrol.com/mutual-funds/nippon-india-small-cap-fund-direct-plan/portfolio-holdings/MRC935",1000);
+      addServiceData("https://www.moneycontrol.com/mutual-funds/quant-small-cap-fund-direct-plan/portfolio-holdings/MES056",5100);
+      addServiceData("https://www.moneycontrol.com/mutual-funds/mirae-asset-emerging-bluechip-fund-direct-plan/portfolio-holdings/MMA100",17499);
+      addServiceData("https://www.moneycontrol.com/mutual-funds/icici-prudential-technology-fund-direct-plan/portfolio-holdings/MPI1128",5000);
+      addServiceData("https://www.moneycontrol.com/mutual-funds/quant-active-fund-direct-plan/portfolio-holdings/MES061",0);
+      // addServiceData("https://www.moneycontrol.com/mutual-funds/parag-parikh-flexi-cap-fund-direct-plan/portfolio-holdings/MPP002",0);
+      // addServiceData("https://www.moneycontrol.com/mutual-funds/nippon-india-pharma-fund-direct-plan/portfolio-holdings/MRC1005",0);
 
       let resultJson = {};
+      let amountJson = {};
+      
       let cacheTimeout = 600000;
       let serviceCache = getServiceCache();
 
       function init() {
         for (let index = 0; index < serviceArr.length; index++) {
           const portfolioUrl = serviceArr[index];
-          const navUrl = getNavUrl(portfolioUrl);
           callService(portfolioUrl, (responseText) => {
-            processMutualFund(getFundName(portfolioUrl), responseText);
+            processMutualFund(getFundName(portfolioUrl), responseText, amountArr[index]);
           });
         }
+      }
+
+      function addServiceData(link,amount){
+        serviceArr.push(link);
+        amountArr.push(amount);
       }
 
       function getNavUrl(portfolioUrl) {
@@ -103,7 +109,8 @@
         return parseFloat(getParsedDom(expenseRationResponseText).querySelector(".navdetails tr:nth-child(1) td:nth-child(2) .amt")?.textContent?.replace("%", "")) * 0.01;
       }
 
-      function processMutualFund(fundName, htmlString) {
+      function processMutualFund(fundName, htmlString, fundAmount) {
+        amountJson[fundName] = fundAmount;
         let currentPercentageChange = 0;
         getParsedDom(htmlString)
           .querySelectorAll("#equityCompleteHoldingTable tbody tr")
@@ -131,9 +138,28 @@
         for (let index = 0; index < nameArr.length; index++) {
           const name = nameArr[index];
           const currentPercentageChange = resultJson[name];
-          tableRow += `<tr><td class="col-left">${name}</td><td class="col-right">${currentPercentageChange}</td></tr>`;
+          const amount = amountJson[name];
+          let modifiedName = name.replace(" Fund Direct Plan", "").replace("Icici", "ICICI").replace("Pgim", "PGIM");
+          tableRow += `<tr>
+              <td class="col-left">
+                ${modifiedName}
+              </td>
+              <td class="col-right">
+                ${currentPercentageChange}
+              </td>
+              <td class="col-right">
+                ${amount}
+              </td>
+            </tr>`;
         }
-        let table = `<table><tr class="table-header"><th class="col-left">Mutual Fund Name</th><th class="col-right">Change %</th></tr>${tableRow}</table>`;
+        let table = `<table>
+          <tr class="table-header">
+            <th class="col-left">Mutual Fund Name</th>
+            <th class="col-right">Change %</th>
+            <th class="col-right">Amount</th>
+          </tr>
+          ${tableRow}
+          </table>`;
         document.getElementById("result").innerHTML = table;
         const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
 
