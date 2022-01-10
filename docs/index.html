@@ -5,6 +5,7 @@
     <style>
       * {
         font-family: -webkit-pictograph;
+        font-size: 20px;
       }
 
       body {
@@ -12,12 +13,18 @@
         color: white;
       }
 
-      #setting {
+      #totalChangeAmt {
         text-align: center;
+        font-size: 35px;
+        padding: 25px;
       }
 
-      #dataInput {
-        vertical-align: middle;
+      .gain{
+        color: chartreuse;
+      }
+
+      .loss{
+        color: firebrick;
       }
 
       table {
@@ -28,6 +35,8 @@
 
       .table-header {
         height: 40px;
+        color: darkviolet;
+        font-size: 30;
       }
 
       .col-right {
@@ -43,7 +52,7 @@
       let serviceArr = [];
       let amountArr = [];
       addServiceData("https://www.moneycontrol.com/mutual-funds/axis-small-cap-fund-direct-plan/portfolio-holdings/MAA316",500);
-      addServiceData("https://www.moneycontrol.com/mutual-funds/pgim-india-flexi-cap-fund-direct-plan/portfolio-holdings/MPA159",100);
+      addServiceData("https://www.moneycontrol.com/mutual-funds/pgim-india-flexi-cap-fund-direct-plan/portfolio-holdings/MPA159",1000);
       addServiceData("https://www.moneycontrol.com/mutual-funds/kotak-small-cap-fund-direct-plan/portfolio-holdings/MKM516",5000);
       addServiceData("https://www.moneycontrol.com/mutual-funds/tata-digital-india-fund-direct-plan/portfolio-holdings/MTA1147",500);
       addServiceData("https://www.moneycontrol.com/mutual-funds/pgim-india-midcap-opportunities-fund-direct-plan/portfolio-holdings/MPA139",1000);
@@ -51,7 +60,8 @@
       addServiceData("https://www.moneycontrol.com/mutual-funds/quant-small-cap-fund-direct-plan/portfolio-holdings/MES056",5100);
       addServiceData("https://www.moneycontrol.com/mutual-funds/mirae-asset-emerging-bluechip-fund-direct-plan/portfolio-holdings/MMA100",17499);
       addServiceData("https://www.moneycontrol.com/mutual-funds/icici-prudential-technology-fund-direct-plan/portfolio-holdings/MPI1128",5000);
-      addServiceData("https://www.moneycontrol.com/mutual-funds/quant-active-fund-direct-plan/portfolio-holdings/MES061",0);
+      addServiceData("https://www.moneycontrol.com/mutual-funds/quant-active-fund-direct-plan/portfolio-holdings/MES061",1000);
+      addServiceData("https://www.moneycontrol.com/mutual-funds/quant-infrastructure-fund-direct-plan/portfolio-holdings/MES051",1000);
       // addServiceData("https://www.moneycontrol.com/mutual-funds/parag-parikh-flexi-cap-fund-direct-plan/portfolio-holdings/MPP002",0);
       // addServiceData("https://www.moneycontrol.com/mutual-funds/nippon-india-pharma-fund-direct-plan/portfolio-holdings/MRC1005",0);
 
@@ -135,11 +145,14 @@
       function renderResult() {
         let tableRow = "";
         let nameArr = Object.keys(resultJson);
+        let totalChangeAmt = 0;
         for (let index = 0; index < nameArr.length; index++) {
           const name = nameArr[index];
           const currentPercentageChange = resultJson[name];
           const amount = amountJson[name];
           let modifiedName = name.replace(" Fund Direct Plan", "").replace("Icici", "ICICI").replace("Pgim", "PGIM");
+          let changeAmt = parseInt(currentPercentageChange*amount*0.01);
+          totalChangeAmt += changeAmt;
           tableRow += `<tr>
               <td class="col-left">
                 ${modifiedName}
@@ -150,13 +163,19 @@
               <td class="col-right">
                 ${amount}
               </td>
+              <td class="col-right">
+                ${changeAmt}
+              </td>
             </tr>`;
         }
-        let table = `<table>
+        let amtClass = (totalChangeAmt > 0)?"gain":"loss";
+        let table = `<div id="totalChangeAmt" class="${amtClass}">Today's Change : ₹. ${totalChangeAmt}</div>
+        <table>
           <tr class="table-header">
             <th class="col-left">Mutual Fund Name</th>
             <th class="col-right">Change %</th>
-            <th class="col-right">Amount</th>
+            <th class="col-right">Invested</th>
+            <th class="col-right">Change Amount</th>
           </tr>
           ${tableRow}
           </table>`;
