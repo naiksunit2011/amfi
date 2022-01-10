@@ -151,7 +151,7 @@
           const currentPercentageChange = resultJson[name];
           const amount = amountJson[name];
           let modifiedName = name.replace(" Fund Direct Plan", "").replace("Icici", "ICICI").replace("Pgim", "PGIM");
-          let changeAmt = parseInt(currentPercentageChange*amount*0.01);
+          let changeAmt = parseFloat(currentPercentageChange*amount*0.01);
           totalChangeAmt += changeAmt;
           tableRow += `<tr>
               <td class="col-left">
@@ -164,12 +164,12 @@
                 ${amount}
               </td>
               <td class="col-right">
-                ${changeAmt}
+                ${changeAmt.toFixed(2)}
               </td>
             </tr>`;
         }
         let amtClass = (totalChangeAmt > 0)?"gain":"loss";
-        let table = `<div id="totalChangeAmt" class="${amtClass}">Today's Change : ₹. ${totalChangeAmt}</div>
+        let table = `<div id="totalChangeAmt" class="${amtClass}">Today's Change : ₹. ${totalChangeAmt.toFixed(2)}</div>
         <table>
           <tr class="table-header">
             <th class="col-left">Mutual Fund Name</th>
