@@ -1,165 +1,230 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-    <style>
-      * {
-        font-family: -webkit-pictograph;
-      }
 
-      body {
-        background-color: black;
-        color: white;
-      }
+<head>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <style>
+    * {
+      font-family: monospace;
+      font-size: 30px;
+      line-height: 50px;
+    }
 
-      #setting {
-        text-align: center;
-      }
+    body {
+      background-color: black;
+      color: white;
+    }
 
-      #dataInput {
-        vertical-align: middle;
-      }
+    #totalChangeAmt-Sunit,
+    #totalChangeAmt-Pranali {
+      text-align: center;
+      font-size: 50px;
+      padding: 25px;
+    }
 
-      table {
-        margin-left: auto;
-        margin-right: auto;
-        width: 90%;
-      }
+    .gain {
+      color: chartreuse;
+    }
 
-      .table-header {
-        height: 40px;
-      }
+    .loss {
+      color: firebrick;
+    }
 
-      .col-right {
-        text-align: right;
-      }
+    table {
+      margin-left: auto;
+      margin-right: auto;
+      width: 90%;
+    }
 
-      .col-left {
-        text-align: left;
-      }
-    </style>
-    <script>
-      let SERVICE_CACHE = "serviceCacheData";
-      let serviceArr = [];
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/axis-small-cap-fund-direct-plan/portfolio-holdings/MAA316");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/pgim-india-flexi-cap-fund-direct-plan/portfolio-holdings/MPA159");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/kotak-small-cap-fund-direct-plan/portfolio-holdings/MKM516");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/tata-digital-india-fund-direct-plan/portfolio-holdings/MTA1147");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/pgim-india-midcap-opportunities-fund-direct-plan/portfolio-holdings/MPA139");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/nippon-india-small-cap-fund-direct-plan/portfolio-holdings/MRC935");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/quant-small-cap-fund-direct-plan/portfolio-holdings/MES056");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/mirae-asset-emerging-bluechip-fund-direct-plan/portfolio-holdings/MMA100");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/icici-prudential-technology-fund-direct-plan/portfolio-holdings/MPI1128");
-      serviceArr.push("https://www.moneycontrol.com/mutual-funds/quant-active-fund-direct-plan/portfolio-holdings/MES061");
-      // serviceArr.push("https://www.moneycontrol.com/mutual-funds/parag-parikh-flexi-cap-fund-direct-plan/portfolio-holdings/MPP002");
-      // serviceArr.push("https://www.moneycontrol.com/mutual-funds/nippon-india-pharma-fund-direct-plan/portfolio-holdings/MRC1005");
+    table td {
+      padding: 5px 10px;
+    }
 
-      let resultJson = {};
-      let cacheTimeout = 600000;
-      let serviceCache = getServiceCache();
+    .table-header {
+      height: 40px;
+      color: darkviolet;
+    }
 
-      function init() {
-        for (let index = 0; index < serviceArr.length; index++) {
-          const portfolioUrl = serviceArr[index];
-          const navUrl = getNavUrl(portfolioUrl);
-          callService(portfolioUrl, (responseText) => {
-            processMutualFund(getFundName(portfolioUrl), responseText);
-          });
-        }
-      }
+    .col-right {
+      text-align: right;
+    }
 
-      function getNavUrl(portfolioUrl) {
-        return portfolioUrl.replace("/mutual-funds/", "/mutual-funds/nav/").replace("/portfolio-holdings/", "/");
-      }
-
-      function getFundName(portfolioUrl) {
-        return titleCase(portfolioUrl.replace("https://www.moneycontrol.com/mutual-funds/", "").split("/")[0].replace(/-/g, " "));
-      }
-
-      function titleCase(str) {
-        let splitStr = str.toLowerCase().split(" ");
-        for (let i = 0; i < splitStr.length; i++) {
-          splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
-        }
-        return splitStr.join(" ");
-      }
-
-      function callService(url, callbackFunction) {
-        let xmlhttp = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
-        xmlhttp.onreadystatechange = () => {
-          if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-            if (callbackFunction) {
-              callbackFunction(xmlhttp.responseText);
+    .col-left {
+      text-align: left;
+    }
+  </style>
+  <script>
+    function init() {
+      let holderList = Object.keys(serviceJson) || [];
+      if (holderList.length > 0) {
+        for (let index = 0; index < holderList.length; index++) {
+          let holderName = holderList[index];
+          if (holderName && serviceJson[holderName]) {
+            let services = serviceJson[holderName];
+            for (let portfolioUrl of Object.keys(services)) {
+              callService(portfolioUrl, (responseText) => {
+                processMutualFund(holderName, getFundName(portfolioUrl), responseText, services[portfolioUrl]);
+              });
             }
-            return xmlhttp.responseText;
           }
-        };
-        xmlhttp.open("GET", url, true);
-        xmlhttp.send();
-      }
-
-      function getExpenseRation(expenseRationResponseText) {
-        return parseFloat(getParsedDom(expenseRationResponseText).querySelector(".navdetails tr:nth-child(1) td:nth-child(2) .amt")?.textContent?.replace("%", "")) * 0.01;
-      }
-
-      function processMutualFund(fundName, htmlString) {
-        let currentPercentageChange = 0;
-        getParsedDom(htmlString)
-          .querySelectorAll("#equityCompleteHoldingTable tbody tr")
-          .forEach((row, index, array) => {
-            let name = row.querySelector("td:nth-child(1)")?.textContent?.replace(/\n/g, "")?.replace(/#/g, "")?.replace(/-/g, "")?.trim();
-            let holdingPercentage = parseFloat(row.querySelector("td:nth-child(5)")?.textContent?.replace(/\n/g, "").replace("%", ""));
-            let stockHref = row.querySelector("td:nth-child(1) a")?.href;
-            let stockLink = "https://priceapi.moneycontrol.com/pricefeed/nse/equitycash/" + stockHref.split("/").pop();
-
-            getCurrentStockChange(stockLink, (pricepercentchange) => {
-              currentPercentageChange += holdingPercentage * 0.01 * parseFloat(pricepercentchange);
-              resultJson[fundName] = currentPercentageChange.toFixed(2);
-              renderResult();
-            });
-          });
-      }
-
-      function getParsedDom(htmlString) {
-        return new DOMParser().parseFromString(htmlString, "text/html");
-      }
-
-      function renderResult() {
-        let tableRow = "";
-        let nameArr = Object.keys(resultJson);
-        for (let index = 0; index < nameArr.length; index++) {
-          const name = nameArr[index];
-          const currentPercentageChange = resultJson[name];
-          tableRow += `<tr><td class="col-left">${name}</td><td class="col-right">${currentPercentageChange}</td></tr>`;
         }
-        let table = `<table><tr class="table-header"><th class="col-left">Mutual Fund Name</th><th class="col-right">Change %</th></tr>${tableRow}</table>`;
-        document.getElementById("result").innerHTML = table;
-        const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
-
-        const comparer = (idx, asc) => (a, b) =>
-          ((v1, v2) => (v1 !== "" && v2 !== "" && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)))(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
-
-        document.querySelectorAll("th").forEach((th) =>
-          th.addEventListener("click", () => {
-            const table = th.closest("table");
-            Array.from(table.querySelectorAll("tr:nth-child(n+2)"))
-              .sort(comparer(Array.from(th.parentNode.children).indexOf(th), (this.asc = !this.asc)))
-              .forEach((tr) => table.appendChild(tr));
-          })
-        );
       }
+    }
 
-      function getCurrentStockChange(stockLink, callbackFunction) {
-        let currentTime = new Date().getTime();
-        let data = serviceCache?.[stockLink]?.data;
-        let time = serviceCache?.[stockLink]?.time;
-        let timeDiff = currentTime - time;
-        if (data && timeDiff < cacheTimeout) {
+    function addServiceData(holderName, link, amount) {
+      let services = serviceJson[holderName];
+      if (!services) {
+        services = {};
+      }
+      let serviceObj = {};
+      serviceObj['link'] = link;
+      serviceObj['amount'] = amount;
+      serviceObj['res'] = 0;
+      services[link] = serviceObj;
+      serviceJson[holderName] = services;
+    }
+
+    function getNavUrl(portfolioUrl) {
+      return portfolioUrl.replace("/mutual-funds/", "/mutual-funds/nav/").replace("/portfolio-holdings/", "/");
+    }
+
+    function getFundName(portfolioUrl) {
+      return titleCase(portfolioUrl.replace("https://www.moneycontrol.com/mutual-funds/", "").split("/")[0].replace(/-/g, " ")).replace(" Fund Direct Plan", "").toUpperCase();
+    }
+
+    function titleCase(str) {
+      let splitStr = str.toLowerCase().split(" ");
+      for (let i = 0; i < splitStr.length; i++) {
+        splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
+      }
+      return splitStr.join(" ");
+    }
+
+    function callService(url, callbackFunction) {
+      let xmlhttp = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+      xmlhttp.onreadystatechange = () => {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
           if (callbackFunction) {
-            callbackFunction(serviceCache?.[stockLink]?.data);
+            callbackFunction(xmlhttp.responseText);
           }
-        } else {
-          callService(stockLink, (responseText) => {
+          return xmlhttp.responseText;
+        }
+      };
+      xmlhttp.open("GET", url, true);
+      xmlhttp.send();
+    }
+
+    function getExpenseRation(expenseRationResponseText) {
+      return parseFloat(getParsedDom(expenseRationResponseText).querySelector(".navdetails tr:nth-child(1) td:nth-child(2) .amt")?.textContent?.replace("%", "")) * 0.01;
+    }
+
+    function processMutualFund(holderName, fundName, htmlString, serviceObj) {
+      let fundAmount = serviceObj['amount'];
+      let currentPercentageChange = 0;
+      getParsedDom(htmlString)
+        .querySelectorAll("#equityCompleteHoldingTable tbody tr")
+        .forEach((row, index, array) => {
+          let name = row.querySelector("td:nth-child(1)")?.textContent?.replace(/\n/g, "")?.replace(/#/g, "")?.replace(/-/g, "")?.trim();
+          let holdingPercentage = parseFloat(row.querySelector("td:nth-child(5)")?.textContent?.replace(/\n/g, "").replace("%", ""));
+          let stockHref = row.querySelector("td:nth-child(1) a")?.href;
+          let stockLink = "https://priceapi.moneycontrol.com/pricefeed/nse/equitycash/" + stockHref.split("/").pop();
+
+          getCurrentStockChange(holderName, stockLink, (pricepercentchange) => {
+            currentPercentageChange += holdingPercentage * 0.01 * parseFloat(pricepercentchange);
+            serviceObj['res'] = currentPercentageChange.toFixed(2);
+            renderResult();
+          });
+        });
+    }
+
+    function getParsedDom(htmlString) {
+      return new DOMParser().parseFromString(htmlString, "text/html");
+    }
+
+    function renderResult() {
+      let holderList = Object.keys(serviceJson) || [];
+      if (holderList.length > 0) {
+        for (let index = 0; index < holderList.length; index++) {
+          let holderName = holderList[index];
+          if (holderName && serviceJson[holderName]) {
+            let services = serviceJson[holderName];
+            let tableRow = "";
+            let totalChangeAmt = 0;
+            for (let j = 0; j < Object.keys(services).length; j++) {
+              let portfolioUrl = Object.keys(services)[j];
+              const name = getFundName(portfolioUrl);
+              const currentPercentageChange = services[portfolioUrl]['res'];
+              const amount = services[portfolioUrl]['amount'];
+              let modifiedName = name;
+              let changeAmt = parseFloat(currentPercentageChange * amount * 0.01);
+              totalChangeAmt += changeAmt;
+              tableRow += `<tr>
+                      <td class="col-left">
+                        ${j + 1}
+                      </td>
+                      <td class="col-left">
+                        ${modifiedName}
+                      </td>
+                      <td class="col-right">
+                        ${currentPercentageChange}
+                      </td>
+                      <td class="col-right">
+                        ${amount}
+                      </td>
+                      <td class="col-right">
+                        ${changeAmt.toFixed(2)}
+                      </td>
+                    </tr>`;
+            }
+            let amtClass = (totalChangeAmt > 0) ? "gain" : "loss";
+            let table = `<div id="totalChangeAmt-${holderName}" class="${amtClass}">${holderName}'s Change : ₹. ${totalChangeAmt.toFixed(2)}</div>
+                <table >
+                  <thead>
+                    <tr class="table-header">
+                      <th class="col-left">No</th>
+                      <th class="col-left">Fund Name</th>
+                      <th class="col-right">%</th>
+                      <th class="col-right">Amt</th>
+                      <th class="col-right">Gain/Loss</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${tableRow}
+                  </tbody>
+                  </table>`;
+            document.getElementById(`result-${holderName}`).innerHTML = table;
+            const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+
+            const comparer = (idx, asc) => (a, b) =>
+              ((v1, v2) => (v1 !== "" && v2 !== "" && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)))(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+
+            document.querySelectorAll("th").forEach((th) =>
+              th.addEventListener("click", () => {
+                const table = th.closest("table");
+                Array.from(table.querySelectorAll("tr:nth-child(n+2)"))
+                  .sort(comparer(Array.from(th.parentNode.children).indexOf(th), (this.asc = !this.asc)))
+                  .forEach((tr) => table.appendChild(tr));
+              })
+            );
+          }
+        }
+      }
+    }
+
+    function getCurrentStockChange(holderName, stockLink, callbackFunction) {
+      let cacheKey = holderName+"_"+stockLink;
+      let currentTime = new Date().getTime();
+      let data = serviceCache?.[cacheKey]?.data;
+      let time = serviceCache?.[cacheKey]?.time;
+      let timeDiff = currentTime - time;
+      if (data && timeDiff < cacheTimeout) {
+        if (callbackFunction) {
+          callbackFunction(serviceCache?.[cacheKey]?.data);
+        }
+      } else {
+        callService(stockLink, (responseText) => {
+          if (responseText?.length > 0) {
             let resp = JSON.parse(responseText);
             let data = "0";
             if (resp.code == 200 && resp.data) {
@@ -168,25 +233,47 @@
                 data = resp.data.pricepercentchange;
               }
             }
-            serviceCache[stockLink] = { time: currentTime, data: data };
+            serviceCache[cacheKey] = { time: currentTime, data: data };
             setServiceCache(serviceCache);
-          });
-        }
+          }
+        });
       }
+    }
 
-      function getServiceCache() {
-        return JSON.parse(localStorage.getItem(SERVICE_CACHE) || "{}");
-      }
+    function getServiceCache() {
+      return JSON.parse(localStorage.getItem(SERVICE_CACHE) || "{}");
+    }
 
-      function setServiceCache(serviceCache) {
-        localStorage.setItem(SERVICE_CACHE, JSON.stringify(serviceCache));
-      }
+    function setServiceCache(serviceCache) {
+      localStorage.setItem(SERVICE_CACHE, JSON.stringify(serviceCache));
+    }
 
-      init();
-    </script>
-  </head>
+    let SERVICE_CACHE = "serviceCacheData";
+    let serviceJson = {};
 
-  <body>
-    <div id="result"></div>
-  </body>
+    //sunit funds
+    addServiceData("Sunit", "https://www.moneycontrol.com/mutual-funds/quant-small-cap-fund-direct-plan/portfolio-overview/MES056", 15999);
+    addServiceData("Sunit", "https://www.moneycontrol.com/mutual-funds/quant-tax-plan-direct-plan/portfolio-overview/MES037", 1000);
+    addServiceData("Sunit", "https://www.moneycontrol.com/mutual-funds/nippon-india-small-cap-fund-direct-plan/portfolio-overview/MRC935", 20999);
+    addServiceData("Sunit", "https://www.moneycontrol.com/mutual-funds/bandhan-nifty-50-index-fund-direct-plan/portfolio-overview/MAG739", 1000);
+    addServiceData("Sunit", "https://www.moneycontrol.com/mutual-funds/icici-prudential-s-p-bse-sensex-index-fund-direct-plan-growth/portfolio-overview/MPI3412", 1000);
+
+    //pranali funds
+    addServiceData("Pranali", "https://www.moneycontrol.com/mutual-funds/quant-small-cap-fund-direct-plan/portfolio-overview/MES056", 150093);
+    addServiceData("Pranali", "https://www.moneycontrol.com/mutual-funds/quant-infrastructure-fund-direct-plan/portfolio-holdings/MES051", 49998);
+    addServiceData("Pranali", "https://www.moneycontrol.com/mutual-funds/nippon-india-small-cap-fund-direct-plan/portfolio-overview/MRC935", 19999);
+
+
+    let cacheTimeout = 600000;
+    let serviceCache = getServiceCache();
+
+    init();
+  </script>
+</head>
+
+<body>
+  <div id="result-Sunit"></div>
+  <div id="result-Pranali"></div>
+</body>
+
 </html>
