@@ -89,7 +89,7 @@
     }
 
     function getFundName(portfolioUrl) {
-      return titleCase(portfolioUrl.split("/").reverse()[2]).replace(" Fund Direct Plan", "").toUpperCase();
+      return titleCase(portfolioUrl.split("/").reverse()[2]).replace(" Fund Direct Plan", "").toUpperCase().replace("-DIRECT-PLAN","").replace("-FUND","").replace("-"," ");
     }
 
     function titleCase(str) {
