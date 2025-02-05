@@ -89,7 +89,7 @@
     }
 
     function getFundName(portfolioUrl) {
-      return titleCase(portfolioUrl.replace("https://www.moneycontrol.com/mutual-funds/", "").split("/")[0].replace(/-/g, " ")).replace(" Fund Direct Plan", "").toUpperCase();
+      return titleCase(portfolioUrl.split("/").reverse()[2]).replace(" Fund Direct Plan", "").toUpperCase();
     }
 
     function titleCase(str) {
@@ -256,9 +256,8 @@
     addServiceData("Sunit", "https://www.moneycontrol.com/mutual-funds/nav/motilal-oswal-midcap-fund-direct-plan/portfolio-holdings/MMO027", 86996);
 
     //pranali funds
-    addServiceData("Pranali", "https://www.moneycontrol.com/mutual-funds/quant-small-cap-fund-direct-plan/portfolio-holdings/MES056", 463104);
     addServiceData("Pranali", "https://www.moneycontrol.com/mutual-funds/nippon-india-small-cap-fund-direct-plan/portfolio-holdings/MRC935", 19999);
-    addServiceData("Pranali", "https://www.moneycontrol.com/mutual-funds/nav/motilal-oswal-midcap-fund-direct-plan/portfolio-holdings/MMO027", 286986);
+    addServiceData("Pranali", "https://www.moneycontrol.com/mutual-funds/nav/motilal-oswal-midcap-fund-direct-plan/portfolio-holdings/MMO027", 486976);
 
 
     let cacheTimeout = 600000;
