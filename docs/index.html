@@ -1,7 +1,12 @@
 <!DOCTYPE html>
 <html>
 <body>
+<h1>Speech color changer</h1>
 
+    <p class="hints"></p>
+    <div>
+      <p class="output"><em>...diagnostic messages</em></p>
+    </div>
 
 <script>
 var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition
@@ -50,12 +55,7 @@ recognition.onerror = function(event) {
   diagnostic.textContent = 'Error occurred in recognition: ' + event.error;
 }
 </script>
-<h1>Speech color changer</h1>
 
-    <p class="hints"></p>
-    <div>
-      <p class="output"><em>...diagnostic messages</em></p>
-    </div>
 
 </body>
 </html>
