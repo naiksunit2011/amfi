@@ -13,7 +13,7 @@ var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition
 var SpeechRecognitionEvent = SpeechRecognitionEvent || webkitSpeechRecognitionEvent
   var colors = [ 'Click Here'];
 
-var recognition = new SpeechRecognition();
+var recognition = new SpeechRecognition();//
 recognition.continuous = false;
 recognition.lang = 'en-US';
 recognition.interimResults = false;
